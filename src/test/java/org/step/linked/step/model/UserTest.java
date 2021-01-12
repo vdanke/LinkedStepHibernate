@@ -9,7 +9,7 @@ public class UserTest {
 
     @Test
     public void userCreationTest() {
-        final User user = new User();
+        final User user = User.builder().build();
 
         Assertions.assertNotNull(user);
     }
@@ -17,11 +17,12 @@ public class UserTest {
     @Test
     public void userCreationTestWithId() {
         final String id = UUID.randomUUID().toString();
-        final User user = new User(id, "username");
+        final User user = User.builder().id(id).username("username").password("password").build();
 
         Assertions.assertNotNull(user);
         Assertions.assertNotNull(user.getId());
         Assertions.assertEquals(id, user.getId());
         Assertions.assertNotNull(user.getUsername());
+        Assertions.assertNotNull(user.getPassword());
     }
 }
