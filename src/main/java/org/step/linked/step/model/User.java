@@ -1,14 +1,33 @@
 package org.step.linked.step.model;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+
+import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
+
 
 @Entity
 @Table(name = "users", indexes = {@Index(name = "IDX_USER_USERNAME", unique = true, columnList = "username")})
+@NamedEntityGraphs(value = {
+        @NamedEntityGraph(
+                name = USER_POSTS_ENTITY_GRAPH,
+                attributeNodes = {
+                        @NamedAttributeNode(value = "posts")
+                }
+//                subgraphs = {@NamedSubgraph(name = "", attributeNodes = {@NamedAttributeNode("")})}
+        )
+})
 public class User {
+
+    public static final String USER_POSTS_ENTITY_GRAPH = "user[posts]";
 
     // GenerationType.TABLE - hibernate is responsible for generation ids by hibernate_sequence
     // GenerationType.IDENTITY - table must have auto increment property on id column
@@ -29,22 +48,33 @@ public class User {
     FetchType.EAGER - при выборке юзеров будет загружать сразу профиля
      */
     @OneToOne(
-            mappedBy = "user",
             fetch = FetchType.LAZY,
             cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}
 //            orphanRemoval = true
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Profile profile;
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "user",
+            cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}
+    )
+    // EntityGraph
+    // @BatchSize(size = 15)
+    // @Fetch(FetchMode.SUBSELECT)
+    // join fetch u.posts
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<Post> posts = new HashSet<>();
 
     public User() {
     }
 
-    private User(String id, String username, String password, Profile profile) {
+    private User(String id, String username, String password, Profile profile, Set<Post> posts) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.profile = profile;
+        this.posts = posts;
     }
 
     public static UserBuilder builder() {
@@ -56,13 +86,20 @@ public class User {
         profile.setUser(this);
     }
 
+    public void addPost(Post post) {
+        this.posts.add(post);
+        post.setUser(this);
+    }
+
     public static class UserBuilder {
         private String id;
         private String username;
         private String password;
         private Profile profile;
+        private Set<Post> posts;
 
-        UserBuilder() {}
+        UserBuilder() {
+        }
 
         public UserBuilder id(String id) {
             this.id = id;
@@ -84,9 +121,22 @@ public class User {
             return this;
         }
 
-        public User build() {
-            return new User(id, username, password, profile);
+        public UserBuilder posts(Set<Post> posts) {
+            this.posts = posts;
+            return this;
         }
+
+        public User build() {
+            return new User(id, username, password, profile, posts);
+        }
+    }
+
+    public Set<Post> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(Set<Post> posts) {
+        this.posts = posts;
     }
 
     public String getUsername() {

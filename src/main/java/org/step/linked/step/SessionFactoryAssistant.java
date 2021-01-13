@@ -3,6 +3,7 @@ package org.step.linked.step;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.step.linked.step.model.Post;
 import org.step.linked.step.model.Profile;
 import org.step.linked.step.model.User;
 
@@ -21,6 +22,7 @@ public class SessionFactoryAssistant {
                 .configure(CONFIGURE_FILE_NAME)
                 .addAnnotatedClass(User.class)
                 .addAnnotatedClass(Profile.class)
+                .addAnnotatedClass(Post.class)
                 .buildSessionFactory();
         lock.unlock();
     }

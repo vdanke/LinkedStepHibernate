@@ -3,6 +3,7 @@ package org.step.linked.step.repository;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.*;
+import org.step.linked.step.model.Post;
 import org.step.linked.step.model.Profile;
 import org.step.linked.step.model.User;
 import org.step.linked.step.repository.impl.UserRepository;
@@ -11,10 +12,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class UserRepositoryTest {
 
@@ -30,6 +28,7 @@ public class UserRepositoryTest {
         sf = new Configuration()
                 .configure("hibernate.cfg-test.xml")
                 .addAnnotatedClass(User.class)
+                .addAnnotatedClass(Post.class)
                 .addAnnotatedClass(Profile.class)
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
