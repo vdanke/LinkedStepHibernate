@@ -3,14 +3,16 @@ package org.step.linked.step.repository;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.*;
-import org.step.linked.step.model.Post;
-import org.step.linked.step.model.Profile;
-import org.step.linked.step.model.User;
+import org.step.linked.step.model.*;
 import org.step.linked.step.repository.impl.UserRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -30,6 +32,10 @@ public class UserRepositoryTest {
                 .addAnnotatedClass(User.class)
                 .addAnnotatedClass(Post.class)
                 .addAnnotatedClass(Profile.class)
+                .addAnnotatedClass(Course.class)
+                .addAnnotatedClass(CourseRating.class)
+                .addAnnotatedClass(CourseRatingComposite.class)
+                .addAnnotatedClass(CourseRatingKey.class)
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 
@@ -53,6 +59,28 @@ public class UserRepositoryTest {
         entityManager.createQuery("delete from User u").executeUpdate();
         entityManager.getTransaction().commit();
         entityManager.close();
+    }
+
+    @Test
+    public void userRepositoryTest_CriteriaBuilder() {
+        boolean isSortNeeded = true;
+        boolean isUsernameLikeQuery = true;
+        String nameToFind = "ser";
+        EntityManager entityManager = emf.createEntityManager();
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
+        Root<User> from = query.from(User.class);
+        CriteriaQuery<User> select = query.select(from);
+        if (isSortNeeded) {
+            select.orderBy(criteriaBuilder.asc(from.get("username")));
+        }
+        if (isUsernameLikeQuery) {
+            Predicate username = criteriaBuilder.like(from.get("username"), "%" + nameToFind + "%");
+            select.where(username);
+        }
+        // entityManage.createQuery("select u from User u where u.username like ?, User.class).getResultList()"
+        List<User> resultList = entityManager.createQuery(select).getResultList();
+        resultList.forEach(User::getUsername);
     }
 
     @Test

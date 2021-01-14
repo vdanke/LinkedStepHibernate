@@ -1,6 +1,7 @@
 package org.step.linked.step.model;
 
 import org.hibernate.annotations.*;
+import org.hibernate.annotations.Cache;
 
 import javax.persistence.*;
 import javax.persistence.CascadeType;
@@ -25,6 +26,10 @@ import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
 //                subgraphs = {@NamedSubgraph(name = "", attributeNodes = {@NamedAttributeNode("")})}
         )
 })
+@DynamicInsert(value = true)
+@DynamicUpdate(value = true)
+@Cacheable(value = true)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class User {
 
     public static final String USER_POSTS_ENTITY_GRAPH = "user[posts]";
@@ -65,16 +70,21 @@ public class User {
     // join fetch u.posts
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<Post> posts = new HashSet<>();
+//    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<CourseRating> courses = new HashSet<>();
 
     public User() {
     }
 
-    private User(String id, String username, String password, Profile profile, Set<Post> posts) {
+    private User(String id, String username, String password, Profile profile, Set<Post> posts, Set<CourseRating> courses) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.profile = profile;
         this.posts = posts;
+        this.courses = courses;
     }
 
     public static UserBuilder builder() {
@@ -96,7 +106,8 @@ public class User {
         private String username;
         private String password;
         private Profile profile;
-        private Set<Post> posts;
+        private Set<Post> posts = new HashSet<>();
+        private Set<CourseRating> courses = new HashSet<>();
 
         UserBuilder() {
         }
@@ -126,8 +137,13 @@ public class User {
             return this;
         }
 
+        public UserBuilder courses(Set<CourseRating> courses) {
+            this.courses = courses;
+            return this;
+        }
+
         public User build() {
-            return new User(id, username, password, profile, posts);
+            return new User(id, username, password, profile, posts, courses);
         }
     }
 
@@ -169,6 +185,14 @@ public class User {
 
     public void setProfile(Profile profile) {
         this.profile = profile;
+    }
+
+    public Set<CourseRating> getCourses() {
+        return courses;
+    }
+
+    public void setCourses(Set<CourseRating> courses) {
+        this.courses = courses;
     }
 
     @Override

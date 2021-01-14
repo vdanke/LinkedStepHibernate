@@ -3,9 +3,7 @@ package org.step.linked.step;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.step.linked.step.model.Post;
-import org.step.linked.step.model.Profile;
-import org.step.linked.step.model.User;
+import org.step.linked.step.model.*;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -23,6 +21,10 @@ public class SessionFactoryAssistant {
                 .addAnnotatedClass(User.class)
                 .addAnnotatedClass(Profile.class)
                 .addAnnotatedClass(Post.class)
+                .addAnnotatedClass(Course.class)
+                .addAnnotatedClass(CourseRating.class)
+                .addAnnotatedClass(CourseRatingComposite.class)
+                .addAnnotatedClass(CourseRatingKey.class)
                 .buildSessionFactory();
         lock.unlock();
     }

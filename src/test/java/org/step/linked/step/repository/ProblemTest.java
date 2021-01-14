@@ -6,9 +6,7 @@ import org.hibernate.jpa.QueryHints;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.step.linked.step.model.Post;
-import org.step.linked.step.model.Profile;
-import org.step.linked.step.model.User;
+import org.step.linked.step.model.*;
 import org.step.linked.step.repository.impl.UserRepository;
 
 import javax.persistence.*;
@@ -16,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
 
 public class ProblemTest {
 
@@ -32,6 +28,10 @@ public class ProblemTest {
                 .addAnnotatedClass(User.class)
                 .addAnnotatedClass(Post.class)
                 .addAnnotatedClass(Profile.class)
+                .addAnnotatedClass(Course.class)
+                .addAnnotatedClass(CourseRating.class)
+                .addAnnotatedClass(CourseRatingComposite.class)
+                .addAnnotatedClass(CourseRatingKey.class)
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 

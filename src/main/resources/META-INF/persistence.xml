@@ -6,7 +6,7 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
 <!--        <class>org.step.linked.step.model.User</class>-->
-<!--        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>-->
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
         <!--        <jta-data-source>java:/DefaultDS</jta-data-source>-->
         <!--        <jar-file>my-entities.jar</jar-file>-->
         <!--        <validation-mode>CALLBACK</validation-mode>-->
@@ -23,20 +23,25 @@
             <!-- show pretty queries -->
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.generate_statistics" value="true"/>
-            <!--            <property name="hibernate.max_fetch_depth" value="3"/>-->
+            <property name="hibernate.max_fetch_depth" value="2"/>
             <!-- tuning JDBC -->
-            <!--            <property name="hibernate.jdbc.batch_size" value="50"/>-->
-            <!--            <property name="hibernate.jdbc.fetch_size" value="50"/>-->
-            <!--            <property name="hibernate.order_updates" value="true"/>-->
-            <!--            <property name="hibernate.order_inserts" value="true"/>-->
+            <property name="hibernate.jdbc.batch_size" value="50"/>
+            <property name="hibernate.jdbc.fetch_size" value="50"/>
+            <property name="hibernate.order_updates" value="true"/>
+            <property name="hibernate.order_inserts" value="true"/>
             <!-- HikariCP for hibernate -->
-            <!--            <property name="hibernate.hikari.connectionTimeout" value="30000"/>-->
-            <!--            <property name="hibernate.hikari.maximumPoolSize" value="50"/>-->
+            <property name="hibernate.hikari.connectionTimeout" value="30000"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="50"/>
+            <!-- Cache 2 level -->
+            <property name="hibernate.cache.use_second_level_cache" value="true"/>
+            <property name="hibernate.cache.use_query_cache" value="true"/>
+            <property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.internal.EhcacheRegionFactory"/>
         </properties>
     </persistence-unit>
     <persistence-unit name="linked-step-test-persistence-unit" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/linked_step_db_test"/>
@@ -49,6 +54,19 @@
             <!-- show pretty queries -->
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.generate_statistics" value="true"/>
+            <property name="hibernate.max_fetch_depth" value="2"/>
+            <!-- tuning JDBC -->
+            <property name="hibernate.jdbc.batch_size" value="50"/>
+            <property name="hibernate.jdbc.fetch_size" value="50"/>
+            <property name="hibernate.order_updates" value="true"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.hikari.connectionTimeout" value="30000"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="50"/>
+            <property name="hibernate.connection.provider_class" value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            <!-- Cache 2 level -->
+            <property name="hibernate.cache.use_second_level_cache" value="true"/>
+            <property name="hibernate.cache.use_query_cache" value="true"/>
+            <property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.internal.EhcacheRegionFactory"/>
         </properties>
     </persistence-unit>
 </persistence>
