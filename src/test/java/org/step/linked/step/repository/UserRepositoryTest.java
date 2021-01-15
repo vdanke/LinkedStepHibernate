@@ -1,5 +1,6 @@
 package org.step.linked.step.repository;
 
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.*;
@@ -8,13 +9,19 @@ import org.step.linked.step.repository.impl.UserRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.FlushModeType;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
+import java.sql.Savepoint;
+import java.sql.Statement;
 import java.util.*;
+
+import static org.step.linked.step.model.User.FIND_ALL_USERS_NATIVE;
 
 public class UserRepositoryTest {
 
@@ -39,7 +46,7 @@ public class UserRepositoryTest {
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 
-        crudRepository = new UserRepository(sf, emf);
+        crudRepository = new UserRepository(emf);
     }
 
     @BeforeEach
@@ -59,6 +66,35 @@ public class UserRepositoryTest {
         entityManager.createQuery("delete from User u").executeUpdate();
         entityManager.getTransaction().commit();
         entityManager.close();
+    }
+
+    @Test
+    public void userRepositoryTest_NamedQueries() {
+        EntityManager entityManager = emf.createEntityManager();
+
+        List<User> resultList = entityManager.createNamedQuery(FIND_ALL_USERS_NATIVE, User.class).getResultList();
+        List<User> resultList1 = entityManager.createNativeQuery("SELECT ID, USERNAME FROM USERS", User.class).getResultList();
+        Session session = sf.openSession();
+
+        List<User> users = new ArrayList<>();
+        String id = UUID.randomUUID().toString();
+
+        session.doWork(connection -> {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM USERS");
+
+            Savepoint first = null;
+            while (resultSet.next()) {
+                connection.setAutoCommit(false);
+                if (resultSet.getString("ID").equals(id)) {
+                    connection.rollback(first);
+                }
+                if (resultSet.getString("USERNAME").contains("SAVE")) {
+                    first = connection.setSavepoint("FIRST");
+                }
+                connection.commit();
+            }
+        });
     }
 
     @Test

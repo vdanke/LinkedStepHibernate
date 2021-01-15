@@ -38,6 +38,14 @@ public class CacheTest {
         entityManager.close();
     }
 
+    @AfterAll
+    public static void clean() {
+        EntityManager entityManager = emf.createEntityManager();
+        entityManager.getTransaction().begin();
+        entityManager.createQuery("delete from Profile p").executeUpdate();
+        entityManager.createQuery("delete from User u").executeUpdate();
+    }
+
     @Test
     public void acacheFirstLevel() {
         EntityManager entityManager = emf.createEntityManager();
@@ -69,13 +77,5 @@ public class CacheTest {
         List<User> user = entityManager.createQuery("select u from User u", User.class)
 //                .setParameter("id", CacheTest.id)
                 .getResultList();
-    }
-
-    @AfterAll
-    public static void clean() {
-        EntityManager entityManager = emf.createEntityManager();
-        entityManager.getTransaction().begin();
-        entityManager.createQuery("delete from Profile p").executeUpdate();
-        entityManager.createQuery("delete from User u").executeUpdate();
     }
 }

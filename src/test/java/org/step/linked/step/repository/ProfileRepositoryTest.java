@@ -31,7 +31,7 @@ public class ProfileRepositoryTest {
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 
-        crudRepository = new UserRepository(sf, emf);
+        crudRepository = new UserRepository(emf);
     }
 
     @BeforeEach

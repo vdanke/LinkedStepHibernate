@@ -1,44 +1,39 @@
 package org.step.linked.step;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.step.linked.step.study.EasyBean;
+import org.step.linked.step.study.HashBean;
+import org.step.linked.step.study.SuperBean;
 
 public class Runner {
 
-    public static int maxRepeatNumber(Integer... numbers) {
-        Map<Integer, Integer> numberMap = new HashMap<>();
-        for (Integer number : numbers) {
-            if (numberMap.containsKey(number)) {
-                numberMap.put(number, numberMap.get(number) + 1);
-                continue;
-            }
-            numberMap.put(number, 1);
-        }
-        class Node {
-            int num; //0
-            int count; //0
-        }
-        Node node = new Node();
-        Set<Map.Entry<Integer, Integer>> entries = numberMap.entrySet();
-        entries
-                .forEach(entry -> {
-                    if (entry.getValue() > node.count) {
-                        node.num = entry.getKey();
-                        node.count = entry.getValue();
-                    }
-                    if (entry.getValue() == node.count) {
-                        if (node.num < entry.getKey()) {
-                            node.num = entry.getKey();
-                        }
-                    }
-                });
-        return node.num;
-    }
-
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
-        int i = maxRepeatNumber(12, 12, 12, 3, 3, 3);
-        System.out.println(i);
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
+        // BeanDefinitionReader - считывает все классы на наличие аннотаций
+        ApplicationContext fromAnnotation = new AnnotationConfigApplicationContext("org.step.linked.step");
+
+        System.out.printf(
+                "Message from annotation %s%n",
+                fromAnnotation.getBean("blablaBean", EasyBean.class).getMessage());
+        System.out.printf(
+                "Message from annotation super bean %s%n",
+                fromAnnotation.getBean("justSuperBean", SuperBean.class).getBean().getMessage()
+        );
+
+        EasyBean easyBean = context.getBean("easyBean", EasyBean.class);
+        EasyBean easyBeanSecond = context.getBean("easyBeanSecond", EasyBean.class);
+        SuperBean superBean = context.getBean("superBean", SuperBean.class);
+
+        System.out.println(easyBean.equals(easyBeanSecond));
+
+        System.out.println(easyBeanSecond.getMessage());
+        System.out.println(easyBean.getMessage());
+        System.out.println(superBean.getBean().getMessage());
+
+        HashBean first = context.getBean("publicHashBean", HashBean.class);
+        HashBean second = context.getBean("publicHashBean", HashBean.class);
+        System.out.printf("Result: %b%n", first.equals(second));
     }
 }

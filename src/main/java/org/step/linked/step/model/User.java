@@ -6,12 +6,19 @@ import org.hibernate.annotations.Cache;
 import javax.persistence.*;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.Index;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.validation.constraints.*;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.step.linked.step.model.User.FIND_ALL_USERS_NATIVE;
 import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
 
 
@@ -26,6 +33,20 @@ import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
 //                subgraphs = {@NamedSubgraph(name = "", attributeNodes = {@NamedAttributeNode("")})}
         )
 })
+@NamedNativeQueries(value = {
+        @NamedNativeQuery(
+                name = FIND_ALL_USERS_NATIVE,
+                query = "SELECT ID, USERNAME FROM USERS",
+                resultClass = User.class,
+                hints = @QueryHint(name = QueryHints.FETCH_SIZE, value = "50")
+        )
+})
+//@NamedQueries(value = {
+//        @NamedQuery(
+//                name = "",
+//                query = ""
+//        )
+//})
 @DynamicInsert(value = true)
 @DynamicUpdate(value = true)
 @Cacheable(value = true)
@@ -33,6 +54,7 @@ import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
 public class User {
 
     public static final String USER_POSTS_ENTITY_GRAPH = "user[posts]";
+    public static final String FIND_ALL_USERS_NATIVE = "native[find_all]";
 
     // GenerationType.TABLE - hibernate is responsible for generation ids by hibernate_sequence
     // GenerationType.IDENTITY - table must have auto increment property on id column
@@ -45,9 +67,26 @@ public class User {
     private String id;
     // По дефолту Хибернейт генерирует название колонки из названия поля
     @Column(name = "username", unique = true, nullable = false, length = 312)
+    @NotNull(message = "Username should not be null")
+    @Size(min = 5, max = 1024)
+    @Email(message = "Not valid email")
     private String username;
     @Column(name = "password", nullable = false, length = 512)
+    @NotBlank(message = "Password should not be blank")
     private String password;
+    @Column(name = "age")
+    @Min(value = 16)
+    @Max(value = 100)
+    private int age;
+    @CollectionTable(
+            name = "authorities",
+            joinColumns = @JoinColumn(
+                    name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "user_authorities_fk"))
+    )
+    @ElementCollection(targetClass = Authority.class, fetch = FetchType.EAGER)
+    @Enumerated(value = EnumType.STRING)
+    @BannVerifier(authorities = {Authority.ROLE_ADMIN, Authority.ROLE_USER})
+    private Set<Authority> authorities = new HashSet<>();
     /*
     FetchType.LAZY - при выборке юзеров не будет загружать профиля (ставится всегда, за исключением определенных случаев)
     FetchType.EAGER - при выборке юзеров будет загружать сразу профиля
@@ -78,18 +117,28 @@ public class User {
     public User() {
     }
 
-    private User(String id, String username, String password, Profile profile, Set<Post> posts, Set<CourseRating> courses) {
+    private User(String id,
+                 String username,
+                 String password,
+                 Profile profile,
+                 Set<Post> posts,
+                 Set<CourseRating> courses,
+                 int age,
+                 Set<Authority> authorities) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.profile = profile;
         this.posts = posts;
         this.courses = courses;
+        this.age = age;
+        this.authorities = authorities;
     }
 
     public static UserBuilder builder() {
         return new UserBuilder();
     }
+
 
     public void addProfile(Profile profile) {
         this.setProfile(profile);
@@ -106,8 +155,10 @@ public class User {
         private String username;
         private String password;
         private Profile profile;
+        private int age;
         private Set<Post> posts = new HashSet<>();
         private Set<CourseRating> courses = new HashSet<>();
+        private Set<Authority> authorities = new HashSet<>();
 
         UserBuilder() {
         }
@@ -137,14 +188,40 @@ public class User {
             return this;
         }
 
+        public UserBuilder age(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public UserBuilder authorities(Set<Authority> authorities) {
+            this.authorities = authorities;
+            return this;
+        }
+
         public UserBuilder courses(Set<CourseRating> courses) {
             this.courses = courses;
             return this;
         }
 
         public User build() {
-            return new User(id, username, password, profile, posts, courses);
+            return new User(id, username, password, profile, posts, courses, age, authorities);
         }
+    }
+
+    public Set<Authority> getAuthorities() {
+        return authorities;
+    }
+
+    public void setAuthorities(Set<Authority> authorities) {
+        this.authorities = authorities;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
     }
 
     public Set<Post> getPosts() {

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"> <!-- easyBean definitions here -->
+    <bean id="easyBean" class="org.step.linked.step.study.EasyBean">
+        <property name="id" value="1"/>
+        <property name="message" value="message"/>
+    </bean>
+    <bean id="easyBeanSecond" class="org.step.linked.step.study.EasyBean">
+        <constructor-arg name="id" value="2"/>
+        <constructor-arg name="message" value="no message"/>
+    </bean>
+    <bean id="superBean" class="org.step.linked.step.study.SuperBean">
+        <constructor-arg name="easyBean" ref="easyBean"/>
+    </bean>
+    <bean id="publicHashBean" class="org.step.linked.step.study.HashBean" scope="prototype">
+        <property name="message" value="message"/>
+    </bean>
+</beans>

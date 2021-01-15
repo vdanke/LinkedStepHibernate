@@ -1,7 +1,5 @@
 package org.step.linked.step.repository.impl;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.step.linked.step.model.User;
 import org.step.linked.step.repository.CRUDRepository;
 
@@ -12,12 +10,9 @@ import java.util.Optional;
 
 public class UserRepository implements CRUDRepository<User> {
 
-    private final SessionFactory sessionFactory;
     private final EntityManagerFactory entityManagerFactory;
 
-    public UserRepository(SessionFactory sessionFactory,
-                          EntityManagerFactory entityManagerFactory) {
-        this.sessionFactory = sessionFactory;
+    public UserRepository(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }
 
@@ -59,18 +54,18 @@ public class UserRepository implements CRUDRepository<User> {
 
     @Override
     public List<User> findAll() {
-        Session session = sessionFactory.openSession();
-        List<User> users = session.createQuery("select u from User u", User.class).getResultList();
-        session.close();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        List<User> users = entityManager.createQuery("select u from User u", User.class).getResultList();
+        entityManager.close();
         return users;
     }
 
     @Override
     public void save(User user) {
-        Session session = sessionFactory.openSession();
-        session.beginTransaction();
-        session.persist(user);
-        session.getTransaction().commit();
-        session.close();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        entityManager.persist(user);
+        entityManager.getTransaction().commit();
+        entityManager.close();
     }
 }
