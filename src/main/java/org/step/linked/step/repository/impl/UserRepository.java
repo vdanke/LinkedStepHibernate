@@ -1,5 +1,7 @@
 package org.step.linked.step.repository.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.step.linked.step.model.User;
 import org.step.linked.step.repository.CRUDRepository;
 
@@ -8,10 +10,12 @@ import javax.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class UserRepository implements CRUDRepository<User> {
 
     private final EntityManagerFactory entityManagerFactory;
 
+    @Autowired
     public UserRepository(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }

@@ -3,24 +3,76 @@ package org.step.linked.step;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.step.linked.step.study.EasyBean;
-import org.step.linked.step.study.HashBean;
-import org.step.linked.step.study.SuperBean;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.step.linked.step.configuration.BeanConfig;
+import org.step.linked.step.configuration.DatabaseConfiguration;
+import org.step.linked.step.model.User;
+import org.step.linked.step.service.IDGenerator;
+import org.step.linked.step.service.UserService;
+import org.step.linked.step.study.*;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class Runner {
 
-    public static void main(String[] args) {
-        ApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
+    public static void main(String[] args) throws IOException {
         // BeanDefinitionReader - считывает все классы на наличие аннотаций
-        ApplicationContext fromAnnotation = new AnnotationConfigApplicationContext("org.step.linked.step");
+//        ApplicationContext fromAnnotation = new AnnotationConfigApplicationContext("org.step.linked.step");
+        AnnotationConfigApplicationContext fromAnnotation = new AnnotationConfigApplicationContext(DatabaseConfiguration.class);
 
-        System.out.printf(
-                "Message from annotation %s%n",
-                fromAnnotation.getBean("blablaBean", EasyBean.class).getMessage());
-        System.out.printf(
-                "Message from annotation super bean %s%n",
-                fromAnnotation.getBean("justSuperBean", SuperBean.class).getBean().getMessage()
-        );
+        SpecialService specialThing = fromAnnotation.getBean("specialThing", SpecialService.class);
+
+        System.out.println(specialThing);
+
+        System.out.println("This is very special thing: " + specialThing.specialThing());
+
+        IDGenerator<String> uuidGenerator = fromAnnotation.getBean("baseIdGenerator", IDGenerator.class);
+        UserService userService = fromAnnotation.getBean("userServiceImpl", UserService.class);
+
+        NotBeanClass notBeanClass = fromAnnotation.getBean("notBeanClass", NotBeanClass.class);
+
+        System.out.println(notBeanClass);
+
+        userService.save(User.builder().username("foo-username@mail.ru").password("bla-password").age(25).build());
+
+        String id = uuidGenerator.generate();
+
+        String resource = getResource(fromAnnotation);
+        String javaHome = getEnvironment(fromAnnotation, "PERSISTENCE_UNIT_NAME_DEV");
+
+        System.out.println(javaHome);
+        System.out.println(resource);
+
+        System.out.printf("Generated ID is %s%n", id);
+
+        fromAnnotation.close();
+    }
+
+    public static String getEnvironment(ApplicationContext context, String propertyName) {
+        Environment environment = context.getEnvironment();
+        boolean isContains = environment.containsProperty(propertyName);
+        if (isContains) {
+            return environment.getProperty(propertyName);
+        }
+        return null;
+    }
+
+    public static String getResource(ApplicationContext context) throws IOException {
+        Resource resource = context.getResource("classpath:beans.xml");
+        boolean isExists = resource.exists();
+        if (isExists) {
+            InputStream inputStream = resource.getInputStream();
+            byte[] bytes = inputStream.readAllBytes();
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+        return null;
+    }
+
+    public static void example() {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
 
         EasyBean easyBean = context.getBean("easyBean", EasyBean.class);
         EasyBean easyBeanSecond = context.getBean("easyBeanSecond", EasyBean.class);
