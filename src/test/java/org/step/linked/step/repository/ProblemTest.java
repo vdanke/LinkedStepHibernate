@@ -35,7 +35,7 @@ public class ProblemTest {
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 
-        crudRepository = new UserRepository(emf);
+        crudRepository = new UserRepository();
 
         EntityManager entityManager = emf.createEntityManager();
         entityManager.getTransaction().begin();

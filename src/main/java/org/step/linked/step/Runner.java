@@ -5,7 +5,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
-import org.step.linked.step.configuration.BeanConfig;
 import org.step.linked.step.configuration.DatabaseConfiguration;
 import org.step.linked.step.model.User;
 import org.step.linked.step.service.IDGenerator;
@@ -15,6 +14,7 @@ import org.step.linked.step.study.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class Runner {
 
@@ -36,7 +36,14 @@ public class Runner {
 
         System.out.println(notBeanClass);
 
-        userService.save(User.builder().username("foo-username@mail.ru").password("bla-password").age(25).build());
+        User user = User.builder().username("foo-username@mail.ru").password("bla-password").age(25).build();
+        userService.save(user);
+        List<User> all = userService.findAll();
+        userService.update(User.builder().id(all.get(0).getId()).username("hop@mail.ru").build());
+
+        userService.findAll().forEach(u -> System.out.printf("User with username %s%n", u.getUsername()));
+
+        System.out.println("The list is " + all);
 
         String id = uuidGenerator.generate();
 

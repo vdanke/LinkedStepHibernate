@@ -1,23 +1,19 @@
 package org.step.linked.step.repository.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.step.linked.step.model.Profile;
 import org.step.linked.step.repository.CRUDRepository;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public class ProfileRepository implements CRUDRepository<Profile> {
 
-    private final EntityManagerFactory emf;
-
-    @Autowired
-    public ProfileRepository(EntityManagerFactory emf) {
-        this.emf = emf;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     public List<Profile> findAll() {

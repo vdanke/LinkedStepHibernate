@@ -1,11 +1,20 @@
 package org.step.linked.step.configuration;
 
+import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.sql.DataSource;
+import java.util.Objects;
+import java.util.Properties;
 
 /*
 1. Environment
@@ -22,6 +31,7 @@ import javax.persistence.Persistence;
         @PropertySource(value = "classpath:db.properties"),
         @PropertySource(value = "classpath:secret.properties")
 })
+@EnableTransactionManagement
 public class DatabaseConfiguration {
 
     private final Environment environment;
@@ -63,8 +73,64 @@ public class DatabaseConfiguration {
     Но!!! Если мы записываем ID bean'a в аннотацию - ID берется из аннотации
      */
 
+    @Bean("dataSource")
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+        dataSource.setUrl(environment.getProperty("db.url"));
+        dataSource.setUsername(environment.getProperty("db.username"));
+        dataSource.setPassword(environment.getProperty("db.password"));
+        dataSource.setDriverClassName(Objects.requireNonNull(environment.getProperty("db.driver")));
+
+        return dataSource;
+    }
+
+    @Bean("testDataSource")
+    @Profile(value = {"test"})
+    public DataSource testDataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+        dataSource.setUrl(environment.getProperty("db.test.url"));
+        dataSource.setUsername(environment.getProperty("db.test.username"));
+        dataSource.setPassword(environment.getProperty("db.test.password"));
+        dataSource.setDriverClassName(Objects.requireNonNull(environment.getProperty("db.test.driver")));
+
+        return dataSource;
+    }
+
     @Bean
-    public EntityManagerFactory entityManagerFactory() {
-        return Persistence.createEntityManagerFactory(environment.getProperty("PERSISTENCE_UNIT_NAME_DEV"));
+//    @DependsOn(value = {"dataSource"})
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource ds) {
+        LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
+
+        emf.setDataSource(ds);
+        emf.setPackagesToScan("org.step.linked.step.model");
+        emf.setPersistenceProviderClass(HibernatePersistenceProvider.class);
+        emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+        emf.setJpaProperties(jpaProperties());
+
+        return emf;
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
+        return new JpaTransactionManager(emf);
+    }
+
+    private Properties jpaProperties() {
+        Properties properties = new Properties();
+
+        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQL10Dialect");
+        properties.setProperty("hibernate.hbm2ddl.auto", "create-drop");
+        properties.setProperty("hibernate.show_sql", "true");
+        properties.setProperty("hibernate.format_sql", "true");
+        properties.setProperty("hibernate.generate_statistics", "true");
+        properties.setProperty("hibernate.max_fetch_depth", "2");
+        properties.setProperty("hibernate.jdbc.batch_size", "50");
+        properties.setProperty("hibernate.jdbc.fetch_size", "50");
+        properties.setProperty("hibernate.order_updates", "true");
+        properties.setProperty("hibernate.order_inserts", "true");
+
+        return properties;
     }
 }
