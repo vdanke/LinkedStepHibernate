@@ -13,5 +13,5 @@ public interface CRUDRepository<T> {
 
     boolean deleteById(String id);
 
-    Optional<T> update(T t);
+    T update(T t);
 }

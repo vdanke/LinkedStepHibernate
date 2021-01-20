@@ -85,7 +85,7 @@ public class User {
     )
     @ElementCollection(targetClass = Authority.class, fetch = FetchType.EAGER)
     @Enumerated(value = EnumType.STRING)
-    @BannVerifier(authorities = {Authority.ROLE_ADMIN, Authority.ROLE_USER})
+//    @BannVerifier(authorities = {Authority.ROLE_ADMIN, Authority.ROLE_USER})
     private Set<Authority> authorities = new HashSet<>();
     /*
     FetchType.LAZY - при выборке юзеров не будет загружать профиля (ставится всегда, за исключением определенных случаев)

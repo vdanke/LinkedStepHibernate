@@ -13,13 +13,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
-@TestMethodOrder(value = MethodOrderer.MethodName.class)
+//@TestMethodOrder(value = MethodOrderer.MethodName.class)
 public class CacheTest {
 
     public static EntityManagerFactory emf;
     public static final String id = UUID.randomUUID().toString();
 
-    @BeforeAll
+//    @BeforeAll
     public static void setup() {
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 
@@ -38,7 +38,7 @@ public class CacheTest {
         entityManager.close();
     }
 
-    @AfterAll
+//    @AfterAll
     public static void clean() {
         EntityManager entityManager = emf.createEntityManager();
         entityManager.getTransaction().begin();
@@ -46,7 +46,7 @@ public class CacheTest {
         entityManager.createQuery("delete from User u").executeUpdate();
     }
 
-    @Test
+//    @Test
     public void acacheFirstLevel() {
         EntityManager entityManager = emf.createEntityManager();
 //        User user = entityManager.find(User.class, id);
@@ -64,13 +64,13 @@ public class CacheTest {
 //        entityManager.getTransaction().commit();
     }
 
-    @Test
+//    @Test
     public void bcacheSecondLevel() {
         int size = CacheManager.ALL_CACHE_MANAGERS.get(0).getCache("org.step.linked.step.model.User").getSize();
         System.out.println(size);
     }
 
-    @Test
+//    @Test
     public void cthirdLevelCache() {
         EntityManager entityManager = emf.createEntityManager();
 

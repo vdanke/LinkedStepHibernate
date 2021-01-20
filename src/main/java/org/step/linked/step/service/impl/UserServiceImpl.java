@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public UserServiceImpl(@Qualifier("baseIdGenerator") IDGenerator<String> idGenerator,
-                           CRUDRepository<User> userCRUDRepository) {
+                           @Qualifier("userRepositoryImpl") CRUDRepository<User> userCRUDRepository) {
         this.idGenerator = idGenerator;
         this.userCRUDRepository = userCRUDRepository;
     }
@@ -74,10 +74,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = NotFoundException.class)
     public User update(User user) {
-        User userFromDB = userCRUDRepository.update(user)
-                .orElseThrow(() -> new NotFoundException(String.format("User with ID %s not found", user.getId())));
-        userFromDB.setUsername(user.getUsername());
-        return userFromDB;
+        return userCRUDRepository.update(user);
     }
 
     @Override

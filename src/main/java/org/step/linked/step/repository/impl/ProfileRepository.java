@@ -36,7 +36,7 @@ public class ProfileRepository implements CRUDRepository<Profile> {
     }
 
     @Override
-    public Optional<Profile> update(Profile profile) {
-        return Optional.empty();
+    public Profile update(Profile profile) {
+        return null;
     }
 }

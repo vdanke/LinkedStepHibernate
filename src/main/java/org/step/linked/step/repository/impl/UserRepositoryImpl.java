@@ -5,21 +5,34 @@ import org.springframework.transaction.annotation.Transactional;
 import org.step.linked.step.exceptions.NotFoundException;
 import org.step.linked.step.model.User;
 import org.step.linked.step.repository.CRUDRepository;
+import org.step.linked.step.repository.UserRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public class UserRepository implements CRUDRepository<User> {
+@Repository("userRepositoryImpl")
+public class UserRepositoryImpl implements CRUDRepository<User>, UserRepository {
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
-    public Optional<User> update(User user) {
-        return Optional.ofNullable(entityManager.find(User.class, user.getId()));
+    public User findByUsername(String username) {
+        return Optional.ofNullable(
+                entityManager.createQuery("select u from User u where u.username=:username", User.class)
+                .setParameter("username", username)
+                .getSingleResult()
+        ).orElseThrow(() -> new NotFoundException(String.format("User with Username %s not found", username)));
+    }
+
+    @Override
+    public User update(User user) {
+        User userFromDB = Optional.ofNullable(entityManager.find(User.class, user.getId()))
+                .orElseThrow(() -> new NotFoundException(String.format("User with ID %s not found", user.getId())));
+        userFromDB.setUsername(user.getUsername());
+        return userFromDB;
     }
 
     @Override

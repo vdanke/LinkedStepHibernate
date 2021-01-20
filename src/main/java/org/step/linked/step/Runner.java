@@ -79,7 +79,7 @@ public class Runner {
     }
 
     public static void example() {
-        ApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
+        ApplicationContext context = new ClassPathXmlApplicationContext("WEB-INF/beans.xml");
 
         EasyBean easyBean = context.getBean("easyBean", EasyBean.class);
         EasyBean easyBeanSecond = context.getBean("easyBeanSecond", EasyBean.class);

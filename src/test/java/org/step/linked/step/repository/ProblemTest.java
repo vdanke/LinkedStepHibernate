@@ -7,7 +7,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.step.linked.step.model.*;
-import org.step.linked.step.repository.impl.UserRepository;
+import org.step.linked.step.repository.impl.UserRepositoryImpl;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -21,7 +21,7 @@ public class ProblemTest {
     public static SessionFactory sf;
     public static EntityManagerFactory emf;
 
-    @BeforeAll
+//    @BeforeAll
     public static void setup() {
         sf = new Configuration()
                 .configure("hibernate.cfg-test.xml")
@@ -35,7 +35,7 @@ public class ProblemTest {
                 .buildSessionFactory();
         emf = Persistence.createEntityManagerFactory("linked-step-test-persistence-unit");
 
-        crudRepository = new UserRepository();
+        crudRepository = new UserRepositoryImpl();
 
         EntityManager entityManager = emf.createEntityManager();
         entityManager.getTransaction().begin();
@@ -79,7 +79,7 @@ public class ProblemTest {
     FETCHGRAPH - только то, что мы явно указали
     LOADGRAPH - то, что мы явно указали + EAGER зависимости
      */
-    @Test
+//    @Test
     public void userRepositoryTest_OneToMany() {
         EntityManager entityManager = emf.createEntityManager();
 //        EntityGraph<?> entityGraph = entityManager.getEntityGraph(USER_POSTS_ENTITY_GRAPH);
@@ -101,7 +101,7 @@ public class ProblemTest {
         }
     }
 
-    @Test
+//    @Test
     public void userRepositoryTest_OneToOne() {
         EntityManager entityManager = emf.createEntityManager();
 
@@ -112,7 +112,7 @@ public class ProblemTest {
         List<User> users = userQuery.getResultList();
     }
 
-    @AfterAll
+//    @AfterAll
     public static void clean() {
         EntityManager entityManager = emf.createEntityManager();
         entityManager.getTransaction().begin();

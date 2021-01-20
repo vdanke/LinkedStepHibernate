@@ -74,6 +74,7 @@ public class DatabaseConfiguration {
      */
 
     @Bean("dataSource")
+    @Profile({"default"})
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
