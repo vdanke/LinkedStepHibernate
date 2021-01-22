@@ -1,5 +1,6 @@
 package org.step.linked.step.repository.impl;
 
+import org.hibernate.query.criteria.internal.OrderImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.step.linked.step.exceptions.NotFoundException;
@@ -9,6 +10,10 @@ import org.step.linked.step.repository.UserRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +30,21 @@ public class UserRepositoryImpl implements CRUDRepository<User>, UserRepository 
                 .setParameter("username", username)
                 .getSingleResult()
         ).orElseThrow(() -> new NotFoundException(String.format("User with Username %s not found", username)));
+    }
+
+    @Override
+    public List<User> findAllWithSorting(int age, String direction) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
+        Root<User> root = query.from(User.class);
+        query.select(root);
+        if (direction.equals("up")) {
+            query.where(criteriaBuilder.gt(root.get("age"), age));
+        } else {
+            query.where(criteriaBuilder.lt(root.get("age"), age));
+        }
+        query.orderBy(criteriaBuilder.asc(root.get("age")));
+        return entityManager.createQuery(query).getResultList();
     }
 
     @Override

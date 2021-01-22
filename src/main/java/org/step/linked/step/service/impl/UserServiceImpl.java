@@ -10,6 +10,7 @@ import org.step.linked.step.exceptions.NotFoundException;
 import org.step.linked.step.model.Authority;
 import org.step.linked.step.model.User;
 import org.step.linked.step.repository.CRUDRepository;
+import org.step.linked.step.repository.UserRepository;
 import org.step.linked.step.service.IDGenerator;
 import org.step.linked.step.service.UserService;
 
@@ -21,12 +22,15 @@ public class UserServiceImpl implements UserService {
 
     private final IDGenerator<String> idGenerator;
     private final CRUDRepository<User> userCRUDRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public UserServiceImpl(@Qualifier("baseIdGenerator") IDGenerator<String> idGenerator,
-                           @Qualifier("userRepositoryImpl") CRUDRepository<User> userCRUDRepository) {
+    public UserServiceImpl(@Qualifier("uuidGenerator") IDGenerator<String> idGenerator,
+                           @Qualifier("userRepositoryImpl") CRUDRepository<User> userCRUDRepository,
+                           @Qualifier("userRepositoryImpl") UserRepository userRepository) {
         this.idGenerator = idGenerator;
         this.userCRUDRepository = userCRUDRepository;
+        this.userRepository = userRepository;
     }
 
     /*
@@ -57,6 +61,12 @@ public class UserServiceImpl implements UserService {
 
     readOnly - флаг исключительно на чтение
      */
+
+    @Override
+    public List<User> findAllWithSorting(int age, String direction) {
+        return userRepository.findAllWithSorting(age, direction);
+    }
+
     @Override
     @Transactional(readOnly = true, timeout = 3000)
     public List<User> findAll() {

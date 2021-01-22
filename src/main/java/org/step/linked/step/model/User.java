@@ -1,5 +1,6 @@
 package org.step.linked.step.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.*;
 import org.hibernate.annotations.Cache;
 
@@ -83,7 +84,7 @@ public class User {
             joinColumns = @JoinColumn(
                     name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "user_authorities_fk"))
     )
-    @ElementCollection(targetClass = Authority.class, fetch = FetchType.EAGER)
+    @ElementCollection(targetClass = Authority.class, fetch = FetchType.LAZY)
     @Enumerated(value = EnumType.STRING)
 //    @BannVerifier(authorities = {Authority.ROLE_ADMIN, Authority.ROLE_USER})
     private Set<Authority> authorities = new HashSet<>();
@@ -97,6 +98,7 @@ public class User {
 //            orphanRemoval = true
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private Profile profile;
     @OneToMany(
             fetch = FetchType.LAZY,
@@ -108,10 +110,12 @@ public class User {
     // @Fetch(FetchMode.SUBSELECT)
     // join fetch u.posts
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private Set<Post> posts = new HashSet<>();
 //    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
     @OneToMany(mappedBy = "user")
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
     private Set<CourseRating> courses = new HashSet<>();
 
     public User() {

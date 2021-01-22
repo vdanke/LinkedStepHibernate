@@ -15,4 +15,6 @@ public interface UserService {
     User findById(String id);
 
     boolean deleteById(String id);
+
+    List<User> findAllWithSorting(int age, String direction);
 }

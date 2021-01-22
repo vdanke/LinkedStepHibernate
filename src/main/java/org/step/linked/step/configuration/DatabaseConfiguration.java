@@ -122,7 +122,7 @@ public class DatabaseConfiguration {
         Properties properties = new Properties();
 
         properties.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQL10Dialect");
-        properties.setProperty("hibernate.hbm2ddl.auto", "create-drop");
+        properties.setProperty("hibernate.hbm2ddl.auto", "update");
         properties.setProperty("hibernate.show_sql", "true");
         properties.setProperty("hibernate.format_sql", "true");
         properties.setProperty("hibernate.generate_statistics", "true");
