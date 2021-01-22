@@ -10,10 +10,7 @@ import org.step.linked.step.repository.UserRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,11 +35,14 @@ public class UserRepositoryImpl implements CRUDRepository<User>, UserRepository 
         CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
         query.select(root);
+        Predicate prAge;
         if (direction.equals("up")) {
-            query.where(criteriaBuilder.gt(root.get("age"), age));
+            prAge = criteriaBuilder.gt(root.get("age"), age);
         } else {
-            query.where(criteriaBuilder.lt(root.get("age"), age));
+            prAge = criteriaBuilder.lt(root.get("age"), age);
         }
+        Predicate equalAge = criteriaBuilder.equal(root.get("age"), age);
+        query.where(criteriaBuilder.or(prAge, equalAge));
         query.orderBy(criteriaBuilder.asc(root.get("age")));
         return entityManager.createQuery(query).getResultList();
     }
@@ -52,6 +52,7 @@ public class UserRepositoryImpl implements CRUDRepository<User>, UserRepository 
         User userFromDB = Optional.ofNullable(entityManager.find(User.class, user.getId()))
                 .orElseThrow(() -> new NotFoundException(String.format("User with ID %s not found", user.getId())));
         userFromDB.setUsername(user.getUsername());
+        userFromDB.setFilename(user.getFilename());
         return userFromDB;
     }
 

@@ -2,32 +2,24 @@ package org.step.linked.step.controller;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.step.linked.step.dto.UserPrivateDTO;
 import org.step.linked.step.dto.UserPublicDTO;
 import org.step.linked.step.dto.request.UserSaveRequest;
 import org.step.linked.step.dto.request.UserUpdateRequest;
+import org.step.linked.step.dto.response.FileUploadResponse;
 import org.step.linked.step.dto.response.UserSaveResponse;
 import org.step.linked.step.dto.response.UserUpdateResponse;
 import org.step.linked.step.model.User;
+import org.step.linked.step.service.FileService;
 import org.step.linked.step.service.UserService;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /*
@@ -45,7 +37,7 @@ DELETE /users/{id}
 PUT - /users{id}
 GET - /users/{id}/courses
 GET - /users/{id}/courses/{id}
- */
+*/
 
 /*
 DispatcherServlet
@@ -59,37 +51,43 @@ Map<String, Servlet>
 public class UserController {
 
     private final UserService userService;
-    private final Path path = Paths.get("C:/Users/viele/files").toAbsolutePath().normalize();
+    private final FileService fileService;
 
+    // /home/*username*/files/*
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService,
+                          FileService fileService) {
         this.userService = userService;
+        this.fileService = fileService;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<UserPublicDTO> getAllUsers() {
-        return userService.findAll()
+    public ResponseEntity<List<UserPublicDTO>> getAllUsers() {
+        List<UserPublicDTO> userPublicDTOS = userService.findAll()
                 .stream()
                 .map(UserPublicDTO::toUserPublicDTO)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(userPublicDTOS);
     }
 
     @GetMapping(value = "/sort", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<UserPublicDTO> getAllUsersWithSorting(
-            @RequestParam(name = "age") Integer age,
+    public ResponseEntity<List<UserPublicDTO>> getAllUsersWithSorting(
+            @RequestParam(name = "age") String age,
             @RequestParam(name = "direction", required = false, defaultValue = "default") String direction
     ) {
-        return userService.findAllWithSorting(age, direction)
+        int iAge = Integer.parseInt(age);
+        List<UserPublicDTO> userPublicDTOList = userService.findAllWithSorting(iAge, direction)
                 .stream()
                 .map(UserPublicDTO::toUserPublicDTO)
                 .collect(Collectors.toList());
+        return new ResponseEntity<>(userPublicDTOList, HttpStatus.OK);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public UserSaveResponse addNewUser(@RequestBody UserSaveRequest request) {
+    public ResponseEntity<UserSaveResponse> addNewUser(@RequestBody UserSaveRequest request) {
         User user = User.builder().username(request.username).password(request.password).age(request.age).build();
         userService.save(user);
-        return new UserSaveResponse(user.getId(), user.getUsername());
+        return ResponseEntity.ok(new UserSaveResponse(user.getId(), user.getUsername()));
     }
 
     @GetMapping(
@@ -97,32 +95,87 @@ public class UserController {
             consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
     )
-    public UserPrivateDTO getUserById(@PathVariable(name = "id") Optional<String> id) {
+    public ResponseEntity<UserPrivateDTO> getUserById(@PathVariable(name = "id") Optional<String> id) {
         UserPrivateDTO dto = new UserPrivateDTO();
         id.ifPresent(userID -> {
             User userByID = userService.findById(userID);
             BeanUtils.copyProperties(userByID, dto);
         });
-        return dto;
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteUserById(@PathVariable(name = "id") String id) {
+    public ResponseEntity<Object> deleteUserById(@PathVariable(name = "id") String id) {
         boolean isDeleted = userService.deleteById(id);
         if (isDeleted) {
-            return "Ok";
+            return ResponseEntity.ok().build();
         }
-        return "Not ok";
+        return ResponseEntity
+                .status(HttpStatus.I_AM_A_TEAPOT)
+                .build();
     }
 
     @PutMapping("/{id}")
-    public UserUpdateResponse updateUserById(
+    public ResponseEntity<UserUpdateResponse> updateUserById(
             @RequestBody UserUpdateRequest request,
             @PathVariable(name = "id") String id
     ) {
         User updatedUser = userService.update(User.builder().id(id).username(request.username).build());
         UserUpdateResponse response = new UserUpdateResponse();
         BeanUtils.copyProperties(updatedUser, response);
-        return response;
+        return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{id}/files/upload")
+    public ResponseEntity<FileUploadResponse> uploadFile(
+            @PathVariable(name = "id") String userID,
+            @RequestParam(name = "file") MultipartFile file
+    ) throws IOException {
+        final String originalFileName = file.getOriginalFilename();
+        final String resultFilename = fileService.save(
+                file.getInputStream(), originalFileName, userID
+        );
+        return ResponseEntity.ok(new FileUploadResponse(resultFilename));
+    }
+
+    @GetMapping("/{id}/files/download/{filename}")
+    public ResponseEntity<Resource> downloadFile(
+            @PathVariable(name = "filename") String filename,
+            @PathVariable(name = "id") String userID
+    ) {
+        userService.findById(userID);
+        Resource resource = fileService.download(filename);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        String.format("attachment; filename=%s", resource.getFilename())
+                ).body(resource);
+    }
+
+    @GetMapping("/null")
+    public String getNull() {
+        String abc = null;
+        byte[] bytes = abc.getBytes();
+        return "CaBoooom";
+    }
+
+    @GetMapping("/go-study-mathematics")
+    public String goStudy() {
+        int d = 1 / 0;
+        return "CaBoooom";
+    }
+
+//    @ExceptionHandler
+//    public ResponseEntity<ExceptionDescription> handleNumberFormatException(Exception e) {
+//        return ResponseEntity
+//                .badRequest()
+//                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+//                .body(
+//                        new ExceptionDescription(
+//                                e.getClass().getSimpleName(), e.getLocalizedMessage(), LocalDateTime.now().toString()
+//                        )
+//                );
+//    }
 }

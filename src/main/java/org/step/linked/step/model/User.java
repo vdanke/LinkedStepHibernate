@@ -79,6 +79,8 @@ public class User {
     @Min(value = 16)
     @Max(value = 100)
     private int age;
+    @Column(name = "filename")
+    private String filename;
     @CollectionTable(
             name = "authorities",
             joinColumns = @JoinColumn(
@@ -128,7 +130,8 @@ public class User {
                  Set<Post> posts,
                  Set<CourseRating> courses,
                  int age,
-                 Set<Authority> authorities) {
+                 Set<Authority> authorities,
+                 String filename) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -137,12 +140,12 @@ public class User {
         this.courses = courses;
         this.age = age;
         this.authorities = authorities;
+        this.filename = filename;
     }
 
     public static UserBuilder builder() {
         return new UserBuilder();
     }
-
 
     public void addProfile(Profile profile) {
         this.setProfile(profile);
@@ -160,6 +163,7 @@ public class User {
         private String password;
         private Profile profile;
         private int age;
+        private String filename;
         private Set<Post> posts = new HashSet<>();
         private Set<CourseRating> courses = new HashSet<>();
         private Set<Authority> authorities = new HashSet<>();
@@ -207,9 +211,22 @@ public class User {
             return this;
         }
 
-        public User build() {
-            return new User(id, username, password, profile, posts, courses, age, authorities);
+        public UserBuilder filename(String filename) {
+            this.filename = filename;
+            return this;
         }
+
+        public User build() {
+            return new User(id, username, password, profile, posts, courses, age, authorities, filename);
+        }
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public Set<Authority> getAuthorities() {
