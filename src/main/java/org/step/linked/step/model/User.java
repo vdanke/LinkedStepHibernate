@@ -72,15 +72,19 @@ public class User {
     @Size(min = 5, max = 1024)
     @Email(message = "Not valid email")
     private String username;
+
     @Column(name = "password", nullable = false, length = 512)
     @NotBlank(message = "Password should not be blank")
     private String password;
+
     @Column(name = "age")
     @Min(value = 16)
     @Max(value = 100)
     private int age;
+
     @Column(name = "filename")
     private String filename;
+
     @CollectionTable(
             name = "authorities",
             joinColumns = @JoinColumn(
@@ -102,6 +106,7 @@ public class User {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private Profile profile;
+
     @OneToMany(
             fetch = FetchType.LAZY,
             mappedBy = "user",
@@ -114,6 +119,7 @@ public class User {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private Set<Post> posts = new HashSet<>();
+
 //    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
     @OneToMany(mappedBy = "user")
     @OnDelete(action = OnDeleteAction.CASCADE)

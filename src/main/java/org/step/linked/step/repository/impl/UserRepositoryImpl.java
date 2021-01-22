@@ -49,11 +49,8 @@ public class UserRepositoryImpl implements CRUDRepository<User>, UserRepository 
 
     @Override
     public User update(User user) {
-        User userFromDB = Optional.ofNullable(entityManager.find(User.class, user.getId()))
-                .orElseThrow(() -> new NotFoundException(String.format("User with ID %s not found", user.getId())));
-        userFromDB.setUsername(user.getUsername());
-        userFromDB.setFilename(user.getFilename());
-        return userFromDB;
+        entityManager.merge(user);
+        return user;
     }
 
     @Override
