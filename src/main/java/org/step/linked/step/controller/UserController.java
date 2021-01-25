@@ -2,6 +2,7 @@ package org.step.linked.step.controller;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +57,7 @@ public class UserController {
     // /home/*username*/files/*
     @Autowired
     public UserController(UserService userService,
-                          FileService fileService) {
+                          @Qualifier("fileServiceImpl") FileService fileService) {
         this.userService = userService;
         this.fileService = fileService;
     }
@@ -152,6 +153,12 @@ public class UserController {
                         HttpHeaders.CONTENT_DISPOSITION,
                         String.format("attachment; filename=%s", resource.getFilename())
                 ).body(resource);
+    }
+
+    @GetMapping("/{username}/github/info")
+    public ResponseEntity<String> getExistGithubProfile(@PathVariable(name = "username") String username) {
+        String profile = userService.fetchExistsGithubProfile(username);
+        return ResponseEntity.ok(profile);
     }
 
     @GetMapping("/null")

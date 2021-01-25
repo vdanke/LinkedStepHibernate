@@ -75,4 +75,13 @@ public class UserRepositoryImpl implements CRUDRepository<User>, UserRepository 
     public void save(User user) {
         entityManager.persist(user);
     }
+
+    @Override
+    public Optional<String> findFileByFilename(String filename) {
+        return Optional.ofNullable(
+                entityManager.createQuery("select u.file from User u where u.filename=:filename", String.class)
+                .setParameter("filename", filename)
+                .getSingleResult()
+        );
+    }
 }

@@ -1,0 +1,1 @@
+Request to the server, PATH: /events/send/file-event, METHOD: GET

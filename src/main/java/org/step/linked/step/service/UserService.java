@@ -17,4 +17,8 @@ public interface UserService {
     boolean deleteById(String id);
 
     List<User> findAllWithSorting(int age, String direction);
+
+    String fileFileByFilename(String filename);
+
+    String fetchExistsGithubProfile(String username);
 }
