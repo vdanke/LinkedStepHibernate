@@ -88,7 +88,10 @@ public class UserController {
     public ResponseEntity<UserSaveResponse> addNewUser(@RequestBody UserSaveRequest request) {
         User user = User.builder().username(request.username).password(request.password).age(request.age).build();
         userService.save(user);
-        return ResponseEntity.ok(new UserSaveResponse(user.getId(), user.getUsername()));
+        return ResponseEntity
+                .status(200)
+                .header("Content-Type", "application/json")
+                .body(new UserSaveResponse(user.getId(), user.getUsername()));
     }
 
     @GetMapping(

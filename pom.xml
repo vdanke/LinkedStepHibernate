@@ -22,6 +22,7 @@
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <mockito.version>3.7.7</mockito.version>
         <jackson.version>2.12.1</jackson.version>
+        <spring.data.version>2.4.3</spring.data.version>
     </properties>
 
     <dependencies>
@@ -56,6 +57,17 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>${spring.version}</version>
+        </dependency>
+        <!-- SPRING DATA JPA -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>${spring.data.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${spring.data.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

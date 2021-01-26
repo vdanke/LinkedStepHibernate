@@ -130,6 +130,22 @@ public class User {
     @JsonIgnore
     private Set<CourseRating> courses = new HashSet<>();
 
+    @PrePersist
+    public void prePersist() {
+        System.out.println("Persist: " + this.id);
+    }
+
+    @PreRemove
+    public void preRemove() {
+        System.out.println("Remove");
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        System.out.println("Update");
+    }
+
+
     public User() {
     }
 
