@@ -3,6 +3,9 @@ package org.step.linked.step.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.*;
 import org.hibernate.annotations.Cache;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.persistence.CascadeType;
@@ -15,6 +18,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -52,6 +56,7 @@ import static org.step.linked.step.model.User.USER_POSTS_ENTITY_GRAPH;
 @DynamicUpdate(value = true)
 @Cacheable(value = true)
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     public static final String USER_POSTS_ENTITY_GRAPH = "user[posts]";
@@ -80,7 +85,7 @@ public class User {
     @Column(name = "age")
     @Min(value = 16)
     @Max(value = 100)
-    private int age;
+    private Integer age;
 
     @Column(name = "filename")
     private String filename;
@@ -130,6 +135,14 @@ public class User {
     @JsonIgnore
     private Set<CourseRating> courses = new HashSet<>();
 
+    @CreatedDate
+    @Column(name = "creation_date")
+    private LocalDateTime creationDate;
+
+    @LastModifiedDate
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
+
     @PrePersist
     public void prePersist() {
         System.out.println("Persist: " + this.id);
@@ -155,7 +168,7 @@ public class User {
                  Profile profile,
                  Set<Post> posts,
                  Set<CourseRating> courses,
-                 int age,
+                 Integer age,
                  Set<Authority> authorities,
                  String filename,
                  String file) {
@@ -190,7 +203,7 @@ public class User {
         private String username;
         private String password;
         private Profile profile;
-        private int age;
+        private Integer age;
         private String filename;
         private Set<Post> posts = new HashSet<>();
         private Set<CourseRating> courses = new HashSet<>();
@@ -225,7 +238,7 @@ public class User {
             return this;
         }
 
-        public UserBuilder age(int age) {
+        public UserBuilder age(Integer age) {
             this.age = age;
             return this;
         }
@@ -255,6 +268,22 @@ public class User {
         }
     }
 
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public LocalDateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(LocalDateTime updatedDate) {
+        this.updatedDate = updatedDate;
+    }
+
     public String getFile() {
         return file;
     }
@@ -279,11 +308,11 @@ public class User {
         this.authorities = authorities;
     }
 
-    public int getAge() {
+    public Integer getAge() {
         return age;
     }
 
-    public void setAge(int age) {
+    public void setAge(Integer age) {
         this.age = age;
     }
 

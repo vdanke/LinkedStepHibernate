@@ -12,27 +12,43 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.step.linked.step.configuration.DatabaseConfiguration;
 import org.step.linked.step.configuration.web.WebMvcConfiguration;
 import org.step.linked.step.configuration.web.WebMvcInitializer;
+import org.step.linked.step.model.Profile;
 import org.step.linked.step.model.User;
+import org.step.linked.step.model.dto.UserUsernamePasswordOnly;
+import org.step.linked.step.model.predicates.SearchingObject;
+import org.step.linked.step.model.predicates.UserSpecification;
+import org.step.linked.step.model.projection.UsernameIdProjection;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration(classes = {DatabaseConfiguration.class, WebMvcConfiguration.class, WebMvcInitializer.class})
 @SqlConfig(dataSource = "testDataSource")
-@Sql(scripts = {"classpath:user_test/test_user_data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = {"classpath:user_test/clean_test_user_data.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+//@Sql(scripts = {"classpath:user_test/test_user_data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+//@Sql(scripts = {"classpath:user_test/clean_test_user_data.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ActiveProfiles({"test"})
 public class UserSpringDataRepositoryTest {
 
     @Autowired
     private UserSpringDataRepositoryImpl userRepository;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    private TransactionTemplate transactionTemplate;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Test
     public void userSpringDataRepository_FindAll() {
@@ -57,12 +73,21 @@ public class UserSpringDataRepositoryTest {
     public void userSpringDataRepository_SaveUser() {
         User user = User.builder()
                 .id(UUID.randomUUID().toString())
-                .username("test@mail.ru")
+                .username("gopstop@mail.ru")
+                .password("password")
+                .age(25)
+                .build();
+
+        User second = User.builder()
+                .id("03bb661f-0c35-49c2-aa71-5a0b5bdca512")
+                .username("newhophop@mail.ru")
                 .password("password")
                 .age(25)
                 .build();
 
         User userFromDB = userRepository.save(user);
+
+        userRepository.save(second);
 
         Optional<User> userByID = userRepository.findById(userFromDB.getId());
 
@@ -163,4 +188,108 @@ public class UserSpringDataRepositoryTest {
         Assertions.assertFalse(usersWithХлебушек.isEmpty());
         Assertions.assertEquals(1, usersWithХлебушек.size());
     }
+
+    @Test
+    public void test_FindAllGeneric() {
+
+        List<User> users = userRepository.findAllWithGeneric();
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void test_DeleteById() {
+        final String userId = "2138c016-5b28-11eb-b409-0242ac110002";
+
+        transactionTemplate = new TransactionTemplate(transactionManager);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            entityManager.createQuery("delete from Profile p where p.user.id=:id")
+                    .setParameter("id", userId)
+                    .executeUpdate();
+        });
+        userRepository.deleteById(userId);
+    }
+
+    @Test
+    public void test_NamedEntityGraph() {
+        List<User> users = userRepository.findAllWithEntityGraph();
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void test_EntityGraph() {
+        List<User> users = userRepository.findAllWithEntityGraphInMethod();
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void test_Projection() {
+        List<UsernameIdProjection> users = userRepository.findAllByProjection();
+
+        users.forEach(p -> System.out.println(p.getFullDescription()));
+    }
+
+    @Test
+    public void test_JPADTO() {
+        List<UserUsernamePasswordOnly> users = entityManager.createQuery(
+                "select new org.step.linked.step.model.dto.UserUsernamePasswordOnly(u.username, u.password) from User u", UserUsernamePasswordOnly.class
+        ).getResultList();
+
+        users.forEach(u -> System.out.printf("%s %s%n", u.getUsername(), u.getPassword()));
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void test_SpringData() {
+        List<UserUsernamePasswordOnly> users = userRepository
+                .findAllByUsernameAndAge("foo@mail.ru", 25, UserUsernamePasswordOnly.class);
+
+        users.forEach(u -> System.out.printf("%s %s%n", u.getUsername(), u.getPassword()));
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void test_Specification() {
+        SearchingObject searchingObject = new SearchingObject();
+
+        searchingObject.setUsername("@mail");
+        searchingObject.setAge(25);
+
+        UserSpecification userSpecification = new UserSpecification(searchingObject);
+
+        List<User> users = userRepository.findAll(userSpecification);
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+    @Test
+    public void test_QueryByExample() {
+        User user = User.builder().username("foo@mail.ru").age(25).profile(Profile.builder().description("descr").build()).build();
+
+        ExampleMatcher modernExample = ExampleMatcher.matchingAll()
+                .withMatcher("username", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
+                .withMatcher("age", ExampleMatcher.GenericPropertyMatcher::exact)
+                .withMatcher("profile.description", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
+                .withIgnoreNullValues();
+
+        Example<User> userExample = Example.of(user, modernExample);
+
+        List<User> users = userRepository.findAll(userExample);
+
+        Assertions.assertFalse(users.isEmpty());
+    }
+
+//    @Test
+//    public void test_SpringDataQueryDTO() {
+//        List<UserUsernamePasswordOnly> users = userRepository.findAllByUsernameХлебушек("foo@mail.ru", UserUsernamePasswordOnly.class);
+//
+//        users.forEach(u -> System.out.printf("%s %s%n", u.getUsername(), u.getPassword()));
+//
+//        Assertions.assertFalse(users.isEmpty());
+//    }
 }
